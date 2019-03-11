@@ -1,5 +1,7 @@
 #include "functions.h"
 
+#define SAFEALLOC(var,Type,count) if((var = (Type *) malloc(count * sizeof(Type))) == NULL) err("not enough memory")
+
 void print_debug(int state, char ch)
 {
 	printf("[DEBUG]: #%d, ", state);

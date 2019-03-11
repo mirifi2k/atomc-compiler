@@ -173,7 +173,7 @@ int getNextToken()
 				}
 				
 				else
-					err("caracter invalid %c\n", crtCh);
+					err("invalid character %c\n", crtCh);
 					
 				break;
 			}
@@ -189,97 +189,22 @@ int getNextToken()
 			}
 			case 2:
 			{
-				int chars = crtCh - startCh;
-				printf("no of chars %d\n", chars);
-
-				if (chars == 5)
-				{
-					if (!memcmp(startCh, "break", 5))
-						tk = addTk(BREAK);
-
-					else if (!memcmp(startCh, "while", 5))
-						tk = addTk(WHILE);
-
-					else
-					{
-						tk = addTk(ID);
-						
-						SAFEALLOC(tk->text, char, chars);
-						tk->text = createString(startCh, crtCh);
-					}
-				}
-				else if (chars == 2)
-				{
-					if (!memcmp(startCh, "if", 2))
-						tk = addTk(IF);
-
-					else
-					{
-						tk = addTk(ID);
-						
-						SAFEALLOC(tk->text, char, chars);
-						tk->text = createString(startCh, crtCh);
-					}
-				}
-				else if (chars == 3)
-				{
-					if (!memcmp(startCh, "for", 3))
-						tk = addTk(FOR);
-
-					else if (!memcmp(startCh, "int", 3))
-						tk = addTk(INT);
-
-					else
-					{
-						tk = addTk(ID);
-						
-						SAFEALLOC(tk->text, char, chars);
-						tk->text = createString(startCh, crtCh);
-					}
-				}
-				else if (chars == 4)
-				{
-					if (!memcmp(startCh, "char", 4))
-						tk = addTk(CHAR);
- 
-					else if (!memcmp(startCh, "else", 4))
-						tk = addTk(ELSE);
-
-					else if (!memcmp(startCh, "void", 4))
-						tk = addTk(VOID);
-
-					else
-					{
-						tk = addTk(ID);
-
-						SAFEALLOC(tk->text, char, chars);
-						tk->text = createString(startCh, crtCh);
-					}
-				}
-				else if (chars == 6)
-				{
-					if (!memcmp(startCh, "double", 6))
-						tk = addTk(DOUBLE);
-
-					else if (!memcmp(startCh, "return", 6))
-						tk = addTk(RETURN);
-
-					else if (!memcmp(startCh, "struct", 6))
-						tk = addTk(STRUCT);
-
-					else
-					{
-						tk = addTk(ID);
-						
-						SAFEALLOC(tk->text, char, chars);
-						tk->text = createString(startCh, crtCh);
-					}
-				}
+				if (!memcmp(startCh, "if", 2)) tk = addTk(IF);
+				else if (!memcmp(startCh, "for", 3)) tk = addTk(FOR);
+				else if (!memcmp(startCh, "int", 3)) tk = addTk(INT);
+				else if (!memcmp(startCh, "char", 4)) tk = addTk(CHAR);
+				else if (!memcmp(startCh, "void", 4)) tk = addTk(VOID);
+				else if (!memcmp(startCh, "else", 4)) tk = addTk(ELSE);
+				else if (!memcmp(startCh, "break", 5)) tk = addTk(BREAK);
+				else if (!memcmp(startCh, "while", 5)) tk = addTk(WHILE);
+				else if (!memcmp(startCh, "double", 6)) tk = addTk(DOUBLE);
+				else if (!memcmp(startCh, "return", 6)) tk = addTk(RETURN);
+				else if (!memcmp(startCh, "struct", 6)) tk = addTk(STRUCT);
 				else
 				{
 					tk = addTk(ID);
 					
-					SAFEALLOC(tk->text, char, chars);
+					SAFEALLOC(tk->text, char, (int)(crtCh - startCh));
 					tk->text = createString(startCh, crtCh);
 				}
 				
@@ -486,7 +411,7 @@ int getNextToken()
 			}
 			case 18:
 			{
-				if (ch == 'a' || ch == 'b' || ch == 'f' || ch == 'n' || ch == 'r' || ch == 't' || ch == 'v' || ch == '\'' || ch == '?' || ch == '"' || ch == '\\' || ch == '\0')
+				if (strchr("abfnrtv'?\"\\\0", ch) != NULL)
 				{
 					startCh = crtCh;
 					++crtCh;
@@ -533,7 +458,7 @@ int getNextToken()
 			}
 			case 22:
 			{
-				if (ch == 'a' || ch == 'b' || ch == 'f' || ch == 'n' || ch == 'r' || ch == 't' || ch == 'v' || ch == '\'' || ch == '?' || ch == '"' || ch == '\\' || ch == '\0')
+				if (strchr("abfnrtv'?\"\\\0", ch) != NULL)
 				{
 					++crtCh;
 					s = 21;
@@ -806,7 +731,7 @@ int main(int argc, char *argv[])
 	}
 
 	FILE *f;
-	if ((f = fopen("testAnalizor.c", "r")) == NULL)
+	if ((f = fopen("8.c", "r")) == NULL)
 	{
 		perror("file error.");
 		exit(EXIT_FAILURE);

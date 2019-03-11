@@ -1,5 +1,3 @@
-#define SAFEALLOC(var,Type,count) if((var = (Type *) malloc(count * sizeof(Type))) == NULL) err("not enough memory")
-
 enum
 {
 	ID = 0, 
