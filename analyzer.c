@@ -236,7 +236,7 @@ int getNextToken()
 			{
 				tk = addTk(CT_INT);
 
-				if (!memcmp(startCh, "0x", 2))
+				if (startCh[0] == '0' && startCh[1] == 'x')
 					tk->i = strtol(createString(startCh, crtCh), NULL, 0);
 
 				else
@@ -263,13 +263,12 @@ int getNextToken()
 			}
 			case 6:
 			{
-				if (ch >= '0' && ch <= '7')
-					++crtCh;
-
-				else if (ch == '8' || ch == '9')
+				if (ch >= '0' && ch <= '9')
 				{
 					++crtCh;
-					s = 9;		
+
+					if (ch == '8' || ch == '9')
+						s = 9;
 				}
 
 				else if (ch == '.')
