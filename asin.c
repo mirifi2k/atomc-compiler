@@ -61,7 +61,7 @@ int exprPrimary()
         
         return 1;
     }
-    
+
     else if (consume(CT_INT))
         return 1;
         
@@ -244,18 +244,32 @@ int declFunc()
     
     if (typeBase())
     {
-        if (consume(MUL))
+        if (consume(MUL) || consume(VOID))
         {
             if (consume(ID))
             {
                 if (consume(LPAR))
                 {
+                    if (funcArg())
+                    {
+                        for (;;)
+                        {
+                            if (consume(COMMA))
+                            {
+                                if (funcArg());
+                                else break;
+                            }
+                            else break;
+                        }
+                    }
+
+                    if (consume(RPAR))
+                    {
+                        if (stmCompound())
+                            return 1;
+                    }
                 }
             }
-            
-        }
-        else if (consume(VOID))
-        {
         }
     }
     
