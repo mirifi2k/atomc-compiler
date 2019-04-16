@@ -71,12 +71,14 @@
 	} Token;
 
 	int line = 1;
-	int crtDepth = 0;
+	int currentDepth = 0;
 	
 	Token *h = NULL;
 	Token *t = NULL;
 	Token *consumedToken;
 	Symbols symbols;
+	Symbol *currentFunc;
+	Symbol *currentStruct;
 
 	void err(const char *fmt, ...)
 	{
@@ -177,6 +179,17 @@
 		s->cls = cls;
 		s->depth = crtDepth;
 		return s;
+	}
+	
+	void printSymbols(Symbols *symbols)
+	{
+		int i;
+		int n = symbols->end - symbols->begin;
+		
+		for (i = 0; i < n; i++)
+		{
+			printf("%s\n", symbols->begin[i]->name);
+		}
 	}
 	
 	Symbol *findSymbol(Symbols *symbols, const char *name)
