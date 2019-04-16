@@ -992,7 +992,7 @@ int exprAssign()
     return 0;
 }
 
-int arrayDecl()
+int arrayDecl(Type *ret)
 {
     Token *startToken = currentToken;
 
@@ -1001,6 +1001,7 @@ int arrayDecl()
     if (consume(LBRA))
     {
         expr();
+        ret->nElements = 0;
         
         if (consume(RBRA))
             return 1;
@@ -1013,7 +1014,7 @@ int arrayDecl()
     return 0;
 }
 
-int declStruct()
+int declStruct(Token *tkName)
 {
     Token *startToken = currentToken;
     
@@ -1025,6 +1026,12 @@ int declStruct()
         {
             if (consume(LACC))
             {
+	        	if (findSymbol(&symbols, tkName->text))
+	        		tkerr(currentToken, "symbol redefinition: %s", tkName->text);
+	        		
+	        	currentStruct = addSymbol(&symbols, tkName->text, CLS_STRUCT);
+	        	initSymbols(&currentStruct->members);
+            		
                 for (;;)
                 {
                     if (declVar())
@@ -1036,7 +1043,10 @@ int declStruct()
                 if (consume(RACC))
                 {
                     if (consume(SEMICOLON))
+                    {
+                    	currentStruct = NULL;
                         return 1;
+                    }
                 }
             }
         }
@@ -1046,26 +1056,76 @@ int declStruct()
     return 0;
 }
 
-int typeBase()
+void addVar(Token *tkName, Type *t)
+{
+	Symbol *s;
+	
+	if (currentStruct)
+	{
+		if (findSymbol(&currentStruct->members, tkName->text))
+			tkerr(currentToken, "symbol redefinition: %s", tkName->text);
+			
+		s = addSymbol(&currentStruct->members, tkName->text, CLS_VAR);
+	}
+	else if (currentFunc)
+	{
+		s = findSymbol(&symbols, tkName->text);
+		if (s && s->depth == currentDepth)
+			tkerr(currentToken, "symbol redefinition: %s", tkName->text);
+			
+		s = addSymbol(&symbols, tkName->text, CLS_VAR);
+		s->mem = MEM_LOCAL;
+	}
+	else
+	{
+		if (findSymbol(&symbols, tkName->text))
+			tkerr(currentToken, "symbol redefinition: %s", tkName->text);
+			
+		s = addSymbol(&symbols, tkName->text, CLS_VAR);
+		s->mem = MEM_GLOBAL;
+	}
+	
+	s->type = *t;
+}
+
+int typeBase(Type *ret)
 {
     Token *startToken = currentToken;
 
     printf("[debug]: typeBase %s?\n", getCode(currentToken->code));
 
     if (consume(INT))
+    {
+    	ret->typeBase = TB_INT;
         return 1;
+    }
     
     else if (consume(DOUBLE))
+    {
+    	ret->typeBase = TB_DOUBLE;
         return 1;
-    
+    }
     else if (consume(CHAR))
+    {
+    	ret->typeBase = TB_CHAR;
         return 1;
-    
+    }
     else if (consume(STRUCT))
     {
         if (consume(ID))
+        {
+        	Symbol *s = findSymbol(&symbols, tkName->text);
+        	
+        	if (s == NULL)
+        		tkerr(currentToken, "undefined symbol: %s", tkName->text);
+    		
+    		if (s->cls != CLS_STRUCT)
+    			tkerr(currentToken, "%s is not a struct", tkName->text);
+    			
+			ret->typeBase = TB_STRUCT;
+			ret->s = s;
             return 1;
-
+		}
         else
         	tkerr(currentToken, "Missing ID after STRUCT.");
     }
@@ -1076,9 +1136,16 @@ int typeBase()
 
 int typeName()
 {
-    if (typeBase())
+	Type ret;
+	
+    if (typeBase(&ret))
     {
-        arrayDecl();
+        if (arrayDecl(&ret))
+        	;
+        
+        else
+        	ret->nElements = -1;
+        	
         return 1;
     }
     return 0;
@@ -1087,14 +1154,28 @@ int typeName()
 int funcArg()
 {
     Token *startToken = currentToken;
+    Type t;
 
     printf("[debug]: funcArg %s?\n", getCode(currentToken->code));
     
-    if (typeBase())
+    if (typeBase(&t))
     {
         if (consume(ID))
         {
-            arrayDecl();
+            if (arrayDecl(&t)
+            	;
+            	
+            else
+            	t.nElements = -1;
+            	
+            Symbol *s = addSymbol(&symbols, tkName->text, CLS_VAR);
+            s->mem = MEM_ARG;
+            s->type = t;
+
+            s = addSymbol(&crtFunc->args, tkName->text, CLS_VAR);
+            s->mem = MEM_ARG;
+            s->type = t;
+            	
             return 1;
         }
         else
@@ -1108,23 +1189,42 @@ int funcArg()
 int declFunc()
 {
     Token *startToken = currentToken;
+    Type t;
     
     printf("[debug]: declFunc %s?\n", getCode(currentToken->code));
     
-    if (typeBase())
+    if (typeBase(&t))
     {
-    	consume(MUL);
+    	if (consume(MUL))
+    		t.nElements = 0;
+    	
+    	else
+    		t.nElements = -1;
+       	
        	goto DECLFUNC;
     }
 
     else if (consume(VOID))
+    {
+    	t.typeBase = TB_VOID;
     	goto DECLFUNC;
-
+	}
+	
     DECLFUNC:
     if (consume(ID))
     {
         if (consume(LPAR))
         {
+        	if (findSymbol(&symbols, tkName->text))
+        		tkerr(currentToken, "symbol redefinition: %s", tkName->text);
+        		
+        	currentFunc = addSymbol(&symbols, tkName->text, CLS_FUNC);
+        	
+        	initSymbols(&currentFunc->args);
+        	
+        	currentFunc->type = t;
+        	currentDepth ++;
+        	
             if (funcArg())
             {
                 for (;;)
@@ -1143,9 +1243,14 @@ int declFunc()
 
             if (consume(RPAR))
             {
+            	currentDepth --;
+            	
                 if (stmCompound())
+                {
+                	deleteSymbolsAfter(&symbols, currentFunc);
+                	currentFunc = NULL;
                     return 1;
-
+				}
                 else
                 	tkerr(currentToken, "Missing statement after ')'.");
             }
@@ -1159,23 +1264,39 @@ int declFunc()
     return 0;
 }
 
-int declVar()
+int declVar(Token *tkName)
 {
     Token *startToken = currentToken;
+	Type t;
 
     printf("[debug]: declVar %s?\n", getCode(currentToken->code));
 
-    if (typeBase())
+    if (typeBase(&t))
     {
         if (consume(ID))
         {
-            arrayDecl();
+            if (arrayDecl(&t))
+            	;
+            	
+            else
+            	t.nElements = -1;
+            	
+            addVar(tkName, t);
+            	
             for (;;)
             {
                 if (consume(COMMA))
                 {
                     if (consume(ID))
-						arrayDecl();
+                    {
+						if (arrayDecl(&t))
+							;
+						
+						else
+							t.nElements = -1;
+					
+						addVar(tkName, t);
+					}
                     
                     else 
                     	tkerr(currentToken, "Missing ID.");
@@ -1198,11 +1319,14 @@ int declVar()
 int stmCompound()
 {
     Token *startToken = currentToken;
+    Symbol *start = symbols.end[-1];
 
     printf("[debug]: stmCompound %s?\n", getCode(currentToken->code));
 
     if (consume(LACC))
     {
+    	currentDepth ++;
+    	
         for (;;)
         {
             if (declVar())
@@ -1215,8 +1339,11 @@ int stmCompound()
         }
 
         if (consume(RACC))
+        {
+        	currentDepth --;
+        	deleteSymbolsAfter(&symbols, start);
             return 1;
-
+		}
         else
         	tkerr(currentToken, "Missing }.");
     }
@@ -1714,7 +1841,7 @@ int main(int argc, char *argv[])
 	}
 
 	FILE *f;
-	if ((f = fopen("9.c", "r")) == NULL)
+	if ((f = fopen("8.c", "r")) == NULL)
 	{
 		perror("file error.");
 		exit(EXIT_FAILURE);
@@ -1736,6 +1863,13 @@ int main(int argc, char *argv[])
 
 	else
 		printf("syntax error\n");
+		
+	initSymbols(&symbols);
+	addSymbol(&symbols, "x", CLS_VAR);
+	addSymbol(&symbols, "y", CLS_VAR);
+	addSymbol(&symbols, "Pt", CLS_STRUCT);
+	
+	printSymbols(&symbols);
 
 	return 0;
 }
