@@ -858,6 +858,7 @@ int consume(int code)
     if (currentToken->code == code)
     {
         printf("consumat.\n");
+        consumedToken = currentToken;
         currentToken = currentToken->nxt;
         return 1;
     }
@@ -1014,9 +1015,10 @@ int arrayDecl(Type *ret)
     return 0;
 }
 
-int declStruct(Token *tkName)
+int declStruct()
 {
     Token *startToken = currentToken;
+    Token *tkName;
     
     printf("[debug]: declStruct %s?\n", getCode(currentToken->code));
     
@@ -1024,6 +1026,7 @@ int declStruct(Token *tkName)
     {
         if (consume(ID))
         {
+        	tkName = consumedToken;
             if (consume(LACC))
             {
 	        	if (findSymbol(&symbols, tkName->text))
@@ -1091,6 +1094,7 @@ void addVar(Token *tkName, Type *t)
 int typeBase(Type *ret)
 {
     Token *startToken = currentToken;
+    Token *tkName;
 
     printf("[debug]: typeBase %s?\n", getCode(currentToken->code));
 
@@ -1114,6 +1118,7 @@ int typeBase(Type *ret)
     {
         if (consume(ID))
         {
+        	tkName = consumedToken;
         	Symbol *s = findSymbol(&symbols, tkName->text);
         	
         	if (s == NULL)
@@ -1134,13 +1139,11 @@ int typeBase(Type *ret)
     return 0;
 }
 
-int typeName()
+int typeName(Type *ret)
 {
-	Type ret;
-	
-    if (typeBase(&ret))
+    if (typeBase(ret))
     {
-        if (arrayDecl(&ret))
+        if (arrayDecl(ret))
         	;
         
         else
@@ -1154,6 +1157,7 @@ int typeName()
 int funcArg()
 {
     Token *startToken = currentToken;
+    Token *tkName;
     Type t;
 
     printf("[debug]: funcArg %s?\n", getCode(currentToken->code));
@@ -1162,7 +1166,8 @@ int funcArg()
     {
         if (consume(ID))
         {
-            if (arrayDecl(&t)
+        	tkName = consumedToken;
+            if (arrayDecl(&t))
             	;
             	
             else
@@ -1172,7 +1177,7 @@ int funcArg()
             s->mem = MEM_ARG;
             s->type = t;
 
-            s = addSymbol(&crtFunc->args, tkName->text, CLS_VAR);
+            s = addSymbol(&currentFunc->args, tkName->text, CLS_VAR);
             s->mem = MEM_ARG;
             s->type = t;
             	
@@ -1184,11 +1189,12 @@ int funcArg()
  
     currentToken = startToken;   
     return 0;
-}               
+}
 
 int declFunc()
 {
     Token *startToken = currentToken;
+    Token *tkName;
     Type t;
     
     printf("[debug]: declFunc %s?\n", getCode(currentToken->code));
@@ -1213,6 +1219,7 @@ int declFunc()
     DECLFUNC:
     if (consume(ID))
     {
+    	tkName = consumedToken;
         if (consume(LPAR))
         {
         	if (findSymbol(&symbols, tkName->text))
@@ -1247,7 +1254,7 @@ int declFunc()
             	
                 if (stmCompound())
                 {
-                	deleteSymbolsAfter(&symbols, currentFunc);
+                	// deleteSymbolsAfter(&symbols, currentFunc);
                 	currentFunc = NULL;
                     return 1;
 				}
@@ -1264,9 +1271,10 @@ int declFunc()
     return 0;
 }
 
-int declVar(Token *tkName)
+int declVar()
 {
     Token *startToken = currentToken;
+    Token *tkName;
 	Type t;
 
     printf("[debug]: declVar %s?\n", getCode(currentToken->code));
@@ -1275,13 +1283,15 @@ int declVar(Token *tkName)
     {
         if (consume(ID))
         {
+        	tkName = consumedToken;
+        	
             if (arrayDecl(&t))
             	;
             	
             else
             	t.nElements = -1;
             	
-            addVar(tkName, t);
+            addVar(tkName, &t);
             	
             for (;;)
             {
@@ -1289,13 +1299,15 @@ int declVar(Token *tkName)
                 {
                     if (consume(ID))
                     {
+                    	tkName = consumedToken;
+                    	
 						if (arrayDecl(&t))
 							;
 						
 						else
 							t.nElements = -1;
 					
-						addVar(tkName, t);
+						addVar(tkName, &t);
 					}
                     
                     else 
@@ -1341,7 +1353,7 @@ int stmCompound()
         if (consume(RACC))
         {
         	currentDepth --;
-        	deleteSymbolsAfter(&symbols, start);
+        	// deleteSymbolsAfter(&symbols, start);
             return 1;
 		}
         else
@@ -1801,6 +1813,8 @@ int exprPostfixPrim()
             if (exprPostfixPrim())
                 return 1;
         }
+        else
+        	tkerr(currentToken, "Missing structure ID.");
     }
 
     currentToken = startToken;
@@ -1810,12 +1824,13 @@ int exprPostfixPrim()
 int exprCast()
 {
     Token *startToken = currentToken;
+    Type t;
 
     printf("[debug]: exprCast %s?\n", getCode(currentToken->code));
 
     if (consume(LPAR))
     {
-        if (typeName())
+        if (typeName(&t))
         {
             if (consume(RPAR))
             {
