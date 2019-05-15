@@ -52,6 +52,21 @@
 	{
 		return codes[code];
 	}
+	
+	const char *getClassName(int class)
+	{
+		return classes[class];
+	}
+
+	const char *getTypeBase(int type)
+	{
+		return typeBases[type];
+	}
+
+	const char *getMemoryType(int type)
+	{
+		return memoryTypes[type];
+	}
 
 	#ifdef _DEBUG_MODE
 		void print_debug(int state, char ch)
@@ -119,7 +134,7 @@
 		
 		for (i = 0; i < n; i++)
 		{
-			printf("%s\n", symbols->begin[i]->name);
+			printf("%s | %s | %s | %s\n", getTypeBase(symbols->begin[i]->type.typeBase), getClassName(symbols->begin[i]->cls), getMemoryType(symbols->begin[i]->mem), symbols->begin[i]->name);
 		}
 	}
 
@@ -156,10 +171,5 @@
 			}
 		}	
 		return str;
-	}
-
-	const char *getClassName(int class)
-	{
-		return classes[class];
 	}
 #endif
