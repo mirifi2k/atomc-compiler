@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
 	}
 
 	FILE *f;
-	if ((f = fopen("8.c", "r")) == NULL)
+	if ((f = fopen("9.c", "r")) == NULL)
 	{
 		perror("file error");
 		exit(EXIT_FAILURE);
@@ -30,6 +30,8 @@ int main(int argc, char *argv[])
 
 	buff[n] = '\0';
 	crtCh = buff;
+	
+	initSymbols(&symbols);
 	
 	while (getNextToken() != END);
 	print_tokens();
@@ -42,12 +44,7 @@ int main(int argc, char *argv[])
 	else
 		printf("syntax error\n");
 		
-	initSymbols(&symbols);
-	addSymbol(&symbols, "x", CLS_VAR);
-	addSymbol(&symbols, "y", CLS_VAR);
-	addSymbol(&symbols, "Pt", CLS_STRUCT);
-	
-	printSymbols(&symbols);
+	print_symbols(&symbols);
 
 	return 0;
 }

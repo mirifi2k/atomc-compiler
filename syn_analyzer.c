@@ -5,18 +5,25 @@
 
 	int consume(int code)
 	{
-	    printf("[debug]: %s? => ", getCode(code));
-	    
+		#if defined _DEBUG_MODE
+	    	printf("[debug]: %s? => ", getTokenName(code));
+	    #endif
+
 	    if (currentToken->code == code)
 	    {
-	        printf("consumat.\n");
+	    	#if defined _DEBUG_MODE
+	        	printf("consumat.\n");
+	        #endif
+
 	        consumedToken = currentToken;
 	        currentToken = currentToken->nxt;
 	        return 1;
 	    }
 	    
-	    printf("neconsumat (%s).\n", getCode(currentToken->code));
-	    
+	    #if defined _DEBUG_MODE
+	    	printf("neconsumat (%s).\n", getTokenName(currentToken->code));
+	    #endif
+
 	    return 0;
 	}
 
@@ -24,8 +31,10 @@
 	{
 	    Token *startToken = currentToken;
 
-	    printf("[debug]: expr %s?\n", getCode(currentToken->code));
-	    
+	    #if defined _DEBUG_MODE
+	    	printf("[debug]: expr %s?\n", getTokenName(currentToken->code));
+	    #endif
+
 	    if (exprAssign())
 	        return 1;
 	        
@@ -37,8 +46,10 @@
 	{
 	    Token *startToken = currentToken;
 
-	    printf("[debug]: exprPrimary %s?\n", getCode(currentToken->code));
-	    
+	    #if defined _DEBUG_MODE
+	    	printf("[debug]: exprPrimary %s?\n", getTokenName(currentToken->code));
+	    #endif
+
 	    if (consume(ID))
 	    {
 	        if (consume(LPAR))
@@ -103,7 +114,9 @@
 	{
 	    Token *startToken = currentToken;
 
-	    printf("[debug]: exprUnary %s?\n", getCode(currentToken->code));
+	    #if defined _DEBUG_MODE
+	    	printf("[debug]: exprUnary %s?\n", getTokenName(currentToken->code));
+	    #endif
 
 	    if (consume(SUB) || consume(NOT))
 	    {
@@ -122,7 +135,9 @@
 	{
 		Token *startToken = currentToken;
 
-		printf("[debug]: exprAssign %s?\n", getCode(currentToken->code));
+		#if defined _DEBUG_MODE
+			printf("[debug]: exprAssign %s?\n", getTokenName(currentToken->code));
+		#endif
 
 	    if (exprUnary())
 	    {
@@ -149,8 +164,10 @@
 	{
 	    Token *startToken = currentToken;
 
-	    printf("[debug]: arrayDecl %s?\n", getCode(currentToken->code));
-	    
+	    #if defined _DEBUG_MODE
+	    	printf("[debug]: arrayDecl %s?\n", getTokenName(currentToken->code));
+	    #endif
+
 	    if (consume(LBRA))
 	    {
 	        expr();
@@ -172,8 +189,10 @@
 	    Token *startToken = currentToken;
 	    Token *tkName;
 	    
-	    printf("[debug]: declStruct %s?\n", getCode(currentToken->code));
-	    
+	    #if defined _DEBUG_MODE
+	    	printf("[debug]: declStruct %s?\n", getTokenName(currentToken->code));
+	    #endif
+
 	    if (consume(STRUCT))
 	    {
 	        if (consume(ID))
@@ -248,14 +267,15 @@
 	    Token *startToken = currentToken;
 	    Token *tkName;
 
-	    printf("[debug]: typeBase %s?\n", getCode(currentToken->code));
+	    #if defined _DEBUG_MODE
+	    	printf("[debug]: typeBase %s?\n", getTokenName(currentToken->code));
+	    #endif
 
 	    if (consume(INT))
 	    {
 	    	ret->typeBase = TB_INT;
 	        return 1;
 	    }
-	    
 	    else if (consume(DOUBLE))
 	    {
 	    	ret->typeBase = TB_DOUBLE;
@@ -312,8 +332,10 @@
 	    Token *tkName;
 	    Type t;
 
-	    printf("[debug]: funcArg %s?\n", getCode(currentToken->code));
-	    
+	    #if defined _DEBUG_MODE
+	    	printf("[debug]: funcArg %s?\n", getTokenName(currentToken->code));
+	    #endif
+
 	    if (typeBase(&t))
 	    {
 	        if (consume(ID))
@@ -349,8 +371,10 @@
 	    Token *tkName;
 	    Type t;
 	    
-	    printf("[debug]: declFunc %s?\n", getCode(currentToken->code));
-	    
+	    #if defined _DEBUG_MODE
+	    	printf("[debug]: declFunc %s?\n", getTokenName(currentToken->code));
+	    #endif
+
 	    if (typeBase(&t))
 	    {
 	    	if (consume(MUL))
@@ -406,7 +430,7 @@
 	            	
 	                if (stmCompound())
 	                {
-	                	// deleteSymbolsAfter(&symbols, currentFunc);
+	                	deleteSymbolsAfter(&symbols, currentFunc);
 	                	currentFunc = NULL;
 	                    return 1;
 					}
@@ -429,7 +453,9 @@
 	    Token *tkName;
 		Type t;
 
-	    printf("[debug]: declVar %s?\n", getCode(currentToken->code));
+		#if defined _DEBUG_MODE
+	    	printf("[debug]: declVar %s?\n", getTokenName(currentToken->code));
+	    #endif
 
 	    if (typeBase(&t))
 	    {
@@ -485,7 +511,9 @@
 	    Token *startToken = currentToken;
 	    Symbol *start = symbols.end[-1];
 
-	    printf("[debug]: stmCompound %s?\n", getCode(currentToken->code));
+	    #if defined _DEBUG_MODE
+	    	printf("[debug]: stmCompound %s?\n", getTokenName(currentToken->code));
+	    #endif
 
 	    if (consume(LACC))
 	    {
@@ -505,7 +533,7 @@
 	        if (consume(RACC))
 	        {
 	        	currentDepth --;
-	        	// deleteSymbolsAfter(&symbols, start);
+	        	deleteSymbolsAfter(&symbols, start);
 	            return 1;
 			}
 	        else
@@ -520,7 +548,9 @@
 	{
 	    Token *startToken = currentToken;
 
-	    printf("[debug]: stm %s?\n", getCode(currentToken->code));
+	    #if defined _DEBUG_MODE
+	    	printf("[debug]: stm %s?\n", getTokenName(currentToken->code));
+	    #endif
 
 	    if (stmCompound())
 	        return 1;
@@ -702,8 +732,10 @@
 	{
 	    Token *startToken = currentToken;
 
-	    printf("[debug]: exprOr %s?\n", getCode(currentToken->code));
-	    
+	    #if defined _DEBUG_MODE
+	    	printf("[debug]: exprOr %s?\n", getTokenName(currentToken->code));
+	    #endif
+
 	    if (exprAnd())
 	    {
 	        if (exprOrPrim())
@@ -721,7 +753,9 @@
 	{
 	    Token *startToken = currentToken;
 
-	    printf("[debug]: exprAnd %s?\n", getCode(currentToken->code));
+	    #if defined _DEBUG_MODE
+	    	printf("[debug]: exprAnd %s?\n", getTokenName(currentToken->code));
+	    #endif
 
 	    if (exprEq())
 	    {
@@ -762,7 +796,9 @@
 	{
 	    Token *startToken = currentToken;
 
-	    printf("[debug]: exprEq %s?\n", getCode(currentToken->code));
+	    #if defined _DEBUG_MODE
+	    	printf("[debug]: exprEq %s?\n", getTokenName(currentToken->code));
+	    #endif
 
 	    if (exprRel())
 	    {
@@ -842,7 +878,9 @@
 	{
 	    Token *startToken = currentToken;
 
-	    printf("[debug]: exprRel %s?\n", getCode(currentToken->code));
+	    #if defined _DEBUG_MODE
+	    	printf("[debug]: exprRel %s?\n", getTokenName(currentToken->code));
+	    #endif
 
 	    if (exprAdd())
 	    {
@@ -861,7 +899,9 @@
 	{
 	    Token *startToken = currentToken;
 
-	    printf("[debug]: exprAdd %s?\n", getCode(currentToken->code));
+	    #if defined _DEBUG_MODE
+	    	printf("[debug]: exprAdd %s?\n", getTokenName(currentToken->code));
+	    #endif
 
 	    if (exprMul())
 	    {
@@ -894,7 +934,9 @@
 	{
 	    Token *startToken = currentToken;
 
-	    printf("[debug]: exprMul %s?\n", getCode(currentToken->code));
+	    #if defined _DEBUG_MODE
+	    	printf("[debug]: exprMul %s?\n", getTokenName(currentToken->code));
+	    #endif
 
 	    if (exprCast())
 	    {
@@ -927,7 +969,9 @@
 	{
 	    Token *startToken = currentToken;
 
-	    printf("[debug]: exprPostfix %s?\n", getCode(currentToken->code));
+	    #if defined _DEBUG_MODE
+	    	printf("[debug]: exprPostfix %s?\n", getTokenName(currentToken->code));
+	    #endif
 
 	    if (exprPrimary())
 	    {
@@ -978,7 +1022,9 @@
 	    Token *startToken = currentToken;
 	    Type t;
 
-	    printf("[debug]: exprCast %s?\n", getCode(currentToken->code));
+	    #if defined _DEBUG_MODE
+	    	printf("[debug]: exprCast %s?\n", getTokenName(currentToken->code));
+	    #endif
 
 	    if (consume(LPAR))
 	    {
@@ -997,5 +1043,75 @@
 
 	    currentToken = startToken;
 	    return 0;
+	}
+
+	void initSymbols(Symbols *symbols)
+	{
+		symbols->begin = symbols->end = symbols->after = NULL;
+	}
+	
+	Symbol *addSymbol(Symbols *symbols, const char *name, int cls)
+	{
+		Symbol *s;
+
+		if (symbols->end == symbols->after)
+		{
+			int count = symbols->after - symbols->begin;
+			int n = count * 2;
+			
+			if (!n)
+				n = 1;
+				
+			if ((symbols->begin = (Symbol **) realloc(symbols->begin, n * sizeof(Symbol *))) == NULL)
+				err("malloc() error.");
+				
+			symbols->end = symbols->begin + count;
+			symbols->after = symbols->begin + n;
+		}
+		
+		SAFEALLOC(s, Symbol, 1);
+		*symbols->end++ = s;
+		s->name = name;
+		s->cls = cls;
+		s->depth = currentDepth;
+
+		return s;
+	}
+	
+	Symbol *findSymbol(Symbols *symbols, const char *name)
+	{
+		int n = symbols->end - symbols->begin;
+		int i;
+		
+		for (i = n - 1; i >= 0; i--)
+		{
+			if (!strcmp(symbols->begin[i]->name, name))
+				return symbols->begin[i];
+		}
+		
+		return NULL;
+	}
+
+	void deleteSymbolsAfter(Symbols *symbols, Symbol *start)
+	{
+		int pos, i;
+		int n = symbols->end - symbols->begin;
+
+		for (i = n - 1; i >= 0; i--)
+		{
+			if (!strcmp(symbols->begin[i]->name, start->name))
+			{
+				pos = i;
+				break;
+			}
+		}
+
+		printf("[debug]: deleteSymbolsAfter() = %d, n = %d\n", pos, n);
+
+		for (i = pos + 1; i < n; i++)
+		{
+			//free(symbols->begin[i]);
+			//symbols->begin[i] = NULL;
+		}
 	}
 #endif

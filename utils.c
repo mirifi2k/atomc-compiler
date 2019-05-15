@@ -1,6 +1,11 @@
 #ifndef _UTILS_INCLUDE
 	#define _UTILS_INCLUDE
 
+	void err(const char *fmt, ...);
+	void tkerr(const Token *tk, const char *fmt, ...);
+
+	#define SAFEALLOC(var,Type,count) if((var = (Type *) malloc(count * sizeof(Type))) == NULL) err("not enough memory")
+
 	Token *addTk(int code)
 	{
 		Token *tk;
@@ -19,6 +24,33 @@
 		}
 
 		return tk;
+	}
+
+	void err(const char *fmt, ...)
+	{
+		va_list va;
+		va_start(va, fmt);
+		fprintf(stderr, "error: ");
+		vfprintf(stderr, fmt, va);
+		fputc('\n', stderr);
+		va_end(va);
+		exit(-1);
+	}
+
+	void tkerr(const Token *tk, const char *fmt, ...)
+	{
+		va_list va;
+		va_start(va, fmt);
+		fprintf(stderr, "error in line %d: ", tk->line);
+		vfprintf(stderr, fmt, va);
+		fputc('\n', stderr);
+		va_end(va);
+		exit(-1);
+	}
+
+	const char *getTokenName(int code)
+	{
+		return codes[code];
 	}
 
 	#ifdef _DEBUG_MODE
@@ -61,7 +93,7 @@
 
 		for (; p != NULL; p = p->nxt)
 		{
-			printf("%d %s", p->line, getCode(p->code));
+			printf("%d %s", p->line, getTokenName(p->code));
 
 			if (p->code == CT_INT)
 				printf(": %ld\n", p->i);
@@ -77,6 +109,17 @@
 
 			else
 				printf("\n");
+		}
+	}
+
+	void print_symbols(Symbols *symbols)
+	{
+		int i;
+		int n = symbols->end - symbols->begin;
+		
+		for (i = 0; i < n; i++)
+		{
+			printf("%s\n", symbols->begin[i]->name);
 		}
 	}
 
@@ -113,5 +156,10 @@
 			}
 		}	
 		return str;
+	}
+
+	const char *getClassName(int class)
+	{
+		return classes[class];
 	}
 #endif

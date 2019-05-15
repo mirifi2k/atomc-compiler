@@ -29,3 +29,8 @@ int exprCast();
 int exprPostfix();
 int exprPostfixPrim();
 int exprPrimary();
+Symbol *findSymbol(Symbols *symbols, const char *name);
+void deleteSymbolsAfter(Symbols *symbols, Symbol *start);
+Symbol *addSymbol(Symbols *symbols, const char *name, int cls);
+void initSymbols(Symbols *symbols);
+void addVar(Token *tkName, Type *t);
